@@ -60,6 +60,7 @@ export class Game {
     this.scene.add(sun);
 
     this.scene.add(this.player.root);
+    this.player.onLand = () => this.sfx.land();
     this.confetti = new Confetti();
     this.scene.add(this.confetti.mesh);
 
