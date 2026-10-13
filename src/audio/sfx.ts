@@ -6,8 +6,22 @@ export class Sfx {
   private master: GainNode | null = null;
   enabled = true;
 
-  /** Debe llamarse desde un toque del usuario (los navegadores lo exigen). */
+  /**
+   * Debe llamarse desde un toque del usuario (los navegadores lo exigen).
+   * Se puede llamar en cada toque: si el audio ya está activo no hace nada.
+   */
   unlock() {
+    // iPhone/iPad: por defecto el sonido web se calla con el modo silencio (la voz no).
+    // Pedimos el modo "reproducción", como una app de música o de video.
+    const nav = navigator as Navigator & { audioSession?: { type: string } };
+    if (nav.audioSession && nav.audioSession.type !== 'playback') {
+      try {
+        nav.audioSession.type = 'playback';
+      } catch {
+        /* navegador sin soporte: seguimos igual */
+      }
+    }
+
     if (!this.ctx) {
       const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!Ctx) return;
@@ -15,8 +29,20 @@ export class Sfx {
       this.master = this.ctx.createGain();
       this.master.gain.value = 0.5;
       this.master.connect(this.ctx.destination);
+
+      // iOS más viejos: reproducir un sonido mudo con <audio> también saca al juego del modo silencio,
+      // y un buffer vacío termina de "despertar" el audio.
+      const silent = new Audio(SILENT_WAV);
+      silent.setAttribute('playsinline', '');
+      void silent.play().catch(() => {});
+      const buffer = this.ctx.createBuffer(1, 1, 22050);
+      const src = this.ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(this.ctx.destination);
+      src.start(0);
     }
-    if (this.ctx.state === 'suspended') void this.ctx.resume();
+    // "suspended" al arrancar; "interrupted" en iOS después de una llamada o de cambiar de app
+    if (this.ctx.state !== 'running') void this.ctx.resume().catch(() => {});
   }
 
   setEnabled(on: boolean) {
@@ -93,3 +119,29 @@ export class Sfx {
     speechSynthesis.speak(u);
   }
 }
+
+/** Medio segundo de silencio en formato WAV, armado en el momento (no hace falta un archivo). */
+const SILENT_WAV = (() => {
+  const rate = 8000;
+  const samples = rate / 2;
+  const bytes = new Uint8Array(44 + samples);
+  const view = new DataView(bytes.buffer);
+  const text = (offset: number, str: string) => [...str].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)));
+  text(0, 'RIFF');
+  view.setUint32(4, 36 + samples, true);
+  text(8, 'WAVE');
+  text(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate, true);
+  view.setUint16(32, 1, true);
+  view.setUint16(34, 8, true); // 8 bits
+  text(36, 'data');
+  view.setUint32(40, samples, true);
+  bytes.fill(128, 44); // 128 = silencio en 8 bits
+  let bin = '';
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  return `data:audio/wav;base64,${btoa(bin)}`;
+})();

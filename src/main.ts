@@ -33,6 +33,11 @@ soundBtn.addEventListener('click', () => {
   paintSound();
 });
 
+// En cada toque nos aseguramos de que el sonido esté activo (iOS lo pausa al cambiar de app).
+for (const ev of ['touchend', 'click', 'keydown'] as const) {
+  window.addEventListener(ev, () => game.sfx.unlock(), { capture: true, passive: true });
+}
+
 // ---------- Pantallas ----------
 function play() {
   game.sfx.unlock();
