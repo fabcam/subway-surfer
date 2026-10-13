@@ -162,13 +162,13 @@ public/
 ## 8. Etapas de desarrollo
 
 ### Etapa 1: Prototipo jugable
-- [ ] Proyecto base (Vite + TypeScript + Three.js).
-- [ ] Pista infinita de 3 carriles con vías y escenario simple.
-- [ ] Personaje (forma simple) que corre, cambia de carril y salta.
-- [ ] Botones táctiles grandes + teclado.
-- [ ] Vagones con **choque amable** (frenar, gesto, acomodarse al costado).
-- [ ] Estrellas para juntar, con imán.
-- [ ] Meta con festejo.
+- [x] Proyecto base (Vite + TypeScript + Three.js).
+- [x] Pista de 3 carriles con vías y escenario simple.
+- [x] Personaje (forma simple) que corre, cambia de carril y salta.
+- [x] Botones táctiles grandes + teclado.
+- [x] Vagones con **choque amable** (frenar, gesto, acomodarse al costado).
+- [x] Estrellas para juntar, con imán.
+- [x] Meta con festejo.
 - **Objetivo:** probarlo con un chico real lo antes posible y ajustar.
 
 ### Etapa 2: Accesibilidad
