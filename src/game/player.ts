@@ -12,6 +12,8 @@ export class Player {
   lane: LaneIndex = 1;
   x: number = LANES[1];
   y = 0;
+  /** Se llama cuando toca el piso después de un salto. */
+  onLand: () => void = () => {};
 
   private body = new THREE.Group();
   private head = new THREE.Group();
@@ -185,6 +187,7 @@ export class Player {
       if (this.jumpT >= 1) {
         this.jumpT = -1;
         this.y = 0;
+        this.onLand();
       } else {
         this.y = this.jumpH * 4 * this.jumpT * (1 - this.jumpT);
       }
